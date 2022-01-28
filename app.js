@@ -24,67 +24,59 @@ app.get('/api/stats/:username', async (req, res) => {
     `https://api.github.com/search/commits?q=author:${username}`
   );
 
-  const starred = await axios.get(
-    `https://api.github.com/users/${username}/starred,`,
-    {
-      params: { page: 1 },
-    }
-  );
-
   while (value > 0) {
-    // if (curStarred > 0) {
-    //   const starred = await axios.get(
-    //     `https://api.github.com/users/${username}/starred,`,
-    //     {
-    //       params: { page: 1 },
-    //     }
-    //   );
-    //   curStarred = starred.data.length;
-    // }
+    if (curStarred > 0) {
+      const starred = await axios.get(
+        `https://api.github.com/users/${username}/starred`,
+        {
+          params: { page },
+        }
+      );
+      curStarred = starred.data.length;
+    }
 
-    // if (curFollowers > 0) {
-    //   const followers = await axios.get(
-    //     `https://api.github.com/users/${username}/followers`,
-    //     {
-    //       params: { page },
-    //     }
-    //   );
-    //   curFollowers = followers.data.length;
-    // }
+    if (curFollowers > 0) {
+      const followers = await axios.get(
+        `https://api.github.com/users/${username}/followers`,
+        {
+          params: { page },
+        }
+      );
+      curFollowers = followers.data.length;
+    }
 
-    // if (curFollowing > 0) {
-    //   const following = await axios.get(
-    //     `https://api.github.com/users/${username}/following`,
-    //     {
-    //       params: { page },
-    //     }
-    //   );
-    //   curFollowing = following.data.length;
-    // }
+    if (curFollowing > 0) {
+      const following = await axios.get(
+        `https://api.github.com/users/${username}/following`,
+        {
+          params: { page },
+        }
+      );
+      curFollowing = following.data.length;
+    }
 
-    // if (curRepos > 0) {
-    //   const repos = await axios.get(
-    //     `https://api.github.com/users/${username}/repos`,
-    //     {
-    //       params: { page },
-    //     }
-    //   );
-    //   curRepos = repos.data.length;
-    // }
+    if (curRepos > 0) {
+      const repos = await axios.get(
+        `https://api.github.com/users/${username}/repos`,
+        {
+          params: { page },
+        }
+      );
+      curRepos = repos.data.length;
+    }
 
-    // totalStarred += curStarred;
-    // totalFollowers += curFollowers;
-    // totalFollowing += curFollowing;
-    // totalRepos += curRepos;
-    // console.log({ totalStarred, totalFollowers, totalFollowing, totalRepos });
+    totalStarred += curStarred;
+    totalFollowers += curFollowers;
+    totalFollowing += curFollowing;
+    totalRepos += curRepos;
     page += 1;
-    // value = curStarred || curFollowers || curFollowing || curRepos;
-    value = 0;
+    console.log({ curStarred, curFollowers, curFollowing, curRepos });
+    value = curStarred || curFollowers || curFollowing || curRepos;
     console.log(value);
   }
   res.json({
     commits: data.total_count,
-    starred: starred.data.length,
+    starred: totalStarred,
     followers: totalFollowers,
     following: totalFollowing,
     repos: totalRepos,

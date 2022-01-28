@@ -1,0 +1,22 @@
+{
+  "name": "github-profile-card",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:BlueIsInk/github-profile-card.git",
+  "author": "grawish <grawish06@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "eslint": "eslint"
+  },
+  "dependencies": {
+    "axios": "^0.25.0",
+    "express": "^4.17.2"
+  },
+  "devDependencies": {
+    "eslint": "^8.7.0",
+    "nodemon": "^2.0.15",
+    "prettier": "^2.5.1"
+  }
+}

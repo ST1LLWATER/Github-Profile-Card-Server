@@ -5,6 +5,8 @@ const app = express();
 
 app.use(express.json());
 
+const PORT = process.env.PORT || 4000;
+
 app.get('/api/stats/:username', async (req, res) => {
   const { username } = req.params;
   let totalStars = 0;
@@ -16,91 +18,95 @@ app.get('/api/stats/:username', async (req, res) => {
   let value = 1,
     page = 1;
 
-  const { data } = await axios.get(
-    `https://api.github.com/search/commits?q=author:${username}`
-  );
+  try {
+    const { data } = await axios.get(
+      `https://api.github.com/search/commits?q=author:${username}`
+    );
 
-  const userData = await axios
-    .get(`https://api.github.com/users/${username}`)
-    .then((res) => res.data);
+    const userData = await axios
+      .get(`https://api.github.com/users/${username}`)
+      .then((res) => res.data);
 
-  const languages = {};
+    const languages = {};
 
-  while (value > 0) {
-    if (curStars === 100) {
-      const stars = await axios.get(
-        `https://api.github.com/users/${username}/repos`,
-        {
-          params: { page, per_page: 100 },
-        }
-      );
-      stars.data.map((val) => {
-        totalStars += val.stargazers_count;
-      });
-      curStars = stars.data.length;
-    } else {
-      curStars = 0;
-    }
-
-    if (curRepos === 100) {
-      const repos = await axios.get(
-        `https://api.github.com/users/${username}/repos`,
-        {
-          params: { page, per_page: 100 },
-        }
-      );
-      curRepos=repos.data.length;
-      repos.data.map((val) => {
-        if (val.language) {
-          if (languages[val.language]) {
-            languages[val.language] += 1;
-          } else {
-            languages[val.language] = 1;
+    while (value > 0) {
+      if (curStars === 100) {
+        const stars = await axios.get(
+          `https://api.github.com/users/${username}/repos`,
+          {
+            params: { page, per_page: 100 },
           }
-        }
-      });
-    } else {
-      curRepos = 0;
+        );
+        stars.data.map((val) => {
+          totalStars += val.stargazers_count;
+        });
+        curStars = stars.data.length;
+      } else {
+        curStars = 0;
+      }
+
+      if (curRepos === 100) {
+        const repos = await axios.get(
+          `https://api.github.com/users/${username}/repos`,
+          {
+            params: { page, per_page: 100 },
+          }
+        );
+        curRepos = repos.data.length;
+        repos.data.map((val) => {
+          if (val.language) {
+            if (languages[val.language]) {
+              languages[val.language] += 1;
+            } else {
+              languages[val.language] = 1;
+            }
+          }
+        });
+      } else {
+        curRepos = 0;
+      }
+
+      if (curIssues === 100) {
+        const issues = await axios.get(
+          `https://api.github.com/search/issues?q=author:${username}`,
+          {
+            params: { page, per_page: 100 },
+          }
+        );
+        curIssues = issues.data.items.length;
+        totalIssues = issues.data.total_count;
+        issues.data.items.map((issue) => {
+          if (issue.pull_request) {
+            totalPulls += 1;
+          }
+        });
+      } else {
+        curIssues = 0;
+      }
+      page++;
+      value = curStars || curRepos || curIssues;
     }
 
-    if (curIssues === 100) {
-      const issues = await axios.get(
-        `https://api.github.com/search/issues?q=author:${username}`,
-        {
-          params: { page, per_page: 100 },
-        }
-      );
-      curIssues = issues.data.items.length;
-      totalIssues = issues.data.total_count;
-      issues.data.items.map((issue) => {
-        if (issue.pull_request) {
-          totalPulls += 1;
-        }
-      });
-    } else {
-      curIssues = 0;
-    }
-    page++;
-    value = curStars || curRepos || curIssues;
+    totalIssues -= totalPulls;
+
+    res.json({
+      username: userData.login,
+      avatar: userData.avatar_url,
+      commits: data.total_count,
+      stars: totalStars,
+      followers: userData.followers,
+      following: userData.following,
+      repos: userData.public_repos,
+      languages,
+      created: userData.created_at,
+      totalIssues,
+      totalPulls,
+    });
+  } catch (e) {
+    res.status(500).json(e.message);
   }
-
-  totalIssues -= totalPulls;
-
-  res.json({
-    username: userData.login,
-    avatar: userData.avatar_url,
-    commits: data.total_count,
-    stars: totalStars,
-    followers: userData.followers,
-    following: userData.following,
-    repos: userData.public_repos,
-    languages,
-    created: userData.created_at,
-    totalIssues,
-    totalPulls,
-  });
 });
 
-app.listen(4000, () => {
-  console.log('Auth Server Running On Port 4000');
+app.listen(PORT, () => {
+  console.log(`Auth Server Running On Port ${PORT}`);
 });

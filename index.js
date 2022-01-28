@@ -22,7 +22,7 @@ app.get('/api/stats/:username', async (req, res) => {
   ).then(res=>res.data);
 
   while (value > 0) {
-    if(curStars == 100){
+    if(curStars === 100){
       const stars = await axios.get(
           `https://api.github.com/users/${username}/repos`,
           {

@@ -1,0 +1,74 @@
+const express = require('express');
+const axios = require('axios');
+
+const app = express();
+
+app.use(express.json());
+
+app.get('/api/stats/:username', async (req, res) => {
+  const { username } = req.params;
+  let totalRepos = 0,
+    totalFollowers = 0,
+    totalFollowing = 0;
+  let curRepos = 1,
+    curFollowers = 1,
+    curFollowing = 1;
+  let value = 1,
+    page = 1;
+
+  console.log({ curRepos, curFollowers, curFollowing });
+
+  const { data } = await axios.get(
+    `https://api.github.com/search/commits?q=author:${username}`
+  );
+
+  while (value > 0) {
+    if (curFollowers > 0) {
+      const followers = await axios.get(
+        `https://api.github.com/users/${username}/followers`,
+        {
+          params: { page },
+        }
+      );
+      curFollowers = followers.data.length;
+    }
+
+    if (curFollowing > 0) {
+      const following = await axios.get(
+        `https://api.github.com/users/${username}/following`,
+        {
+          params: { page },
+        }
+      );
+      curFollowing = following.data.length;
+    }
+
+    if (curRepos > 0) {
+      const repos = await axios.get(
+        `https://api.github.com/users/${username}/repos`,
+        {
+          params: { page },
+        }
+      );
+      curRepos = repos.data.length;
+    }
+
+    totalFollowers += curFollowers;
+    totalFollowing += curFollowing;
+    totalRepos += curRepos;
+    page += 1;
+    console.log({ curFollowers, curFollowing, curRepos });
+    value = curFollowers || curFollowing || curRepos;
+    console.log(value);
+  }
+  res.json({
+    commits: data.total_count,
+    followers: totalFollowers,
+    following: totalFollowing,
+    repos: totalRepos,
+  });
+});
+
+app.listen(4000, () => {
+  console.log('Auth Server Running On Port 4000');
+});

@@ -49,6 +49,7 @@ app.get('/api/stats/:username', async (req, res) => {
           params: { page, per_page: 100 },
         }
       );
+      curRepos=repos.data.length;
       repos.data.map((val) => {
         if (val.language) {
           if (languages[val.language]) {

@@ -2,6 +2,8 @@ const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
 
+require('dotenv').config();
+
 const app = express();
 
 app.use(express.json());
@@ -26,11 +28,20 @@ app.get('/api/stats/:username', async (req, res) => {
 
   try {
     const { data } = await axios.get(
-      `https://api.github.com/search/commits?q=author:${username}`
+      `https://api.github.com/search/commits?q=author:${username}`,
+      {
+        headers: {
+          Authorization: `token ${process.env.GITHUB_TOKEN}`,
+        },
+      }
     );
 
     const userData = await axios
-      .get(`https://api.github.com/users/${username}`)
+      .get(`https://api.github.com/users/${username}`, {
+        headers: {
+          Authorization: `token ${process.env.GITHUB_TOKEN}`,
+        },
+      })
       .then((res) => res.data);
 
     const languages = {};
@@ -40,6 +51,9 @@ app.get('/api/stats/:username', async (req, res) => {
         const stars = await axios.get(
           `https://api.github.com/users/${username}/repos`,
           {
+            headers: {
+              Authorization: `token ${process.env.GITHUB_TOKEN}`,
+            },
             params: { page, per_page: 100 },
           }
         );
@@ -55,6 +69,9 @@ app.get('/api/stats/:username', async (req, res) => {
         const repos = await axios.get(
           `https://api.github.com/users/${username}/repos`,
           {
+            headers: {
+              Authorization: `token ${process.env.GITHUB_TOKEN}`,
+            },
             params: { page, per_page: 100 },
           }
         );
@@ -89,6 +106,8 @@ app.get('/api/stats/:username', async (req, res) => {
       } else {
         curIssues = 0;
       }
+
+      console.log({ curStars, curRepos, curIssues });
       page++;
       value = curStars || curRepos || curIssues;
     }
@@ -109,7 +128,28 @@ app.get('/api/stats/:username', async (req, res) => {
       totalPulls,
     });
   } catch (e) {
-    res.status(500).json(e.message);
+    res.status(500).json({
+      message:
+        "Something Went Wrong With The Public API, Sending Team Lead's Github's Mock Data",
+      username: 'ST1LLWATER',
+      avatar: 'https://avatars.githubusercontent.com/u/62516824?v=4',
+      commits: 512,
+      stars: 18,
+      followers: 62,
+      following: 42,
+      repos: 59,
+      languages: {
+        JavaScript: 32,
+        CSS: 5,
+        HTML: 5,
+        Java: 1,
+        'C++': 1,
+        'Jupyter Notebook': 1,
+      },
+      created: '2020-03-22T17:55:52Z',
+      totalIssues: 25,
+      totalPulls: 18,
+    });
   }
 });
 

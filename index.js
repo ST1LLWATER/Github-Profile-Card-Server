@@ -18,6 +18,7 @@ const PORT = process.env.PORT || 4000;
 app.get('/api/stats/:username', async (req, res) => {
   const { username } = req.params;
   let totalStars = 0;
+  let totalFork = 0;
   let curStars = 100;
   let curRepos = 100;
   let curIssues = 100;
@@ -77,6 +78,9 @@ app.get('/api/stats/:username', async (req, res) => {
         );
         curRepos = repos.data.length;
         repos.data.map((val) => {
+          if (val.fork) {
+            totalFork += 1;
+          }
           if (val.language) {
             if (languages[val.language]) {
               languages[val.language] += 1;
@@ -126,6 +130,7 @@ app.get('/api/stats/:username', async (req, res) => {
       created: userData.created_at,
       totalIssues,
       totalPulls,
+      forks: totalFork,
     });
   } catch (e) {
     res.status(500).json({
@@ -149,6 +154,7 @@ app.get('/api/stats/:username', async (req, res) => {
       created: '2020-03-22T17:55:52Z',
       totalIssues: 25,
       totalPulls: 18,
+      forks: 11,
     });
   }
 });
